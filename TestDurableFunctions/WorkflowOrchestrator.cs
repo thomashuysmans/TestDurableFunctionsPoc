@@ -59,7 +59,7 @@ namespace TestDurableFunctions
         public static string SayHelloInSpanish([ActivityTrigger] string name, ILogger log)
         {
             log.LogInformation($"Saying hello in Spanish to {name}.");
-            return $"Buenos d�as {name}!";
+            return $"Buenos dias {name}!";
         }
 
         [FunctionName("Function1_Hello_In_Danish")]
@@ -82,20 +82,15 @@ namespace TestDurableFunctions
 
             // returns ["Hello Tokyo!", "Hello Seattle!", "Hello London!"]
             return outputs;
-            
         }
         
         [FunctionName("ExecuteWorkflow")]
         public static async Task<List<string>> ExecuteWorkflow([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             var outputs = new List<string>();
-
-            // This code doesn't belong here but I didn't wanted to resolve the binding issues.
-            var rand = new Random();
-            var randomNumber = rand.Next(1, 3);
-            //log.LogInformation($"RandomNumber is {randomNumber}.");
+            var workflowId = context.GetInput<int>();
             var workflowManager = new WorkflowManager();
-            var workflow = workflowManager.GetWorkflowByKey(randomNumber);
+            var workflow = workflowManager.GetWorkflowByKey(workflowId);
 
             foreach (var action in workflow.Actions)
             {
@@ -112,7 +107,7 @@ namespace TestDurableFunctions
             [DurableClient] IDurableOrchestrationClient starter,
             ILogger log)
         {
-            var instanceId = await starter.StartNewAsync("ExecuteWorkflow");
+            var instanceId = await starter.StartNewAsync("ExecuteWorkflow", null, 1);
             //var workflowToStart = "Function2";
 
             // Function input comes from the request content.
