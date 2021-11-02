@@ -11,43 +11,6 @@ namespace TestDurableFunctions
 {
     public static class WorkflowOrchestrator
     {
-        
-        // [FunctionName("Function1")]
-        // public static async Task<List<string>> RunOrchestrator3(
-        //     [OrchestrationTrigger] IDurableOrchestrationContext context)
-        // {
-        //     var outputs = new List<string>();
-        //
-        //     // Replace "hello" with the name of your Durable Activity Function.
-        //     outputs.Add(await context.CallActivityAsync<string>("Function1_Hello_In_Danish", "Tokyo"));
-        //     outputs.Add(await context.CallActivityAsync<string>("Function1_Hello_In_Spanish", "Seattle"));
-        //     outputs.Add(await context.CallActivityAsync<string>("Function1_Hello", "London"));
-        //
-        //     // returns ["Hello Tokyo!", "Hello Seattle!", "Hello London!"]
-        //     return outputs;
-        // }
-        //
-        //
-        // [FunctionName("Function2")]
-        // public static async Task<List<string>> RunOrchestrator2(
-        //     [OrchestrationTrigger] IDurableOrchestrationContext context)
-        // {
-        //     var outputs = new List<string>();
-        //
-        //     // Replace "hello" with the name of your Durable Activity Function.
-        //     outputs.Add(await context.CallActivityAsync<string>("Function1_Hello_In_Spanish", "Tokyo"));
-        //     context.SetCustomStatus("Waiting for Godot..........");
-        //     Thread.Sleep(10000);
-        //
-        //     outputs.Add(await context.CallActivityAsync<string>("Function1_Hello", "Seattle"));
-        //     outputs.Add(await context.CallActivityAsync<string>("Function1_Hello_In_Danish", "London"));
-        //
-        //     context.SetCustomStatus("Godot is here..........");
-        //
-        //     // returns ["Hello Tokyo!", "Hello Seattle!", "Hello London!"]
-        //     return outputs;
-        // }
-        
         [FunctionName("Function1_Hello")]
         public static string SayHello([ActivityTrigger] string name, ILogger log)
         {
@@ -69,25 +32,12 @@ namespace TestDurableFunctions
             return $"Godmorgen {name}!";
         }
         
-        [FunctionName("WorkflowOrchestrator")]
-        public static async Task<List<string>> RunOrchestrator(
-            [OrchestrationTrigger] IDurableOrchestrationContext context)
-        {
-            var outputs = new List<string>();
-
-            // Replace "hello" with the name of your Durable Activity Function.
-            outputs.Add(await context.CallActivityAsync<string>("WorkflowOrchestrator_Hello", "Tokyo"));
-            outputs.Add(await context.CallActivityAsync<string>("WorkflowOrchestrator_Hello", "Seattle"));
-            outputs.Add(await context.CallActivityAsync<string>("WorkflowOrchestrator_Hello", "London"));
-
-            // returns ["Hello Tokyo!", "Hello Seattle!", "Hello London!"]
-            return outputs;
-        }
-        
         [FunctionName("ExecuteWorkflow")]
         public static async Task<List<string>> ExecuteWorkflow([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             var outputs = new List<string>();
+            
+            // We can get input parameters by using the context object. 
             var workflowId = context.GetInput<int>();
             var workflowManager = new WorkflowManager();
             var workflow = workflowManager.GetWorkflowByKey(workflowId);
@@ -107,12 +57,8 @@ namespace TestDurableFunctions
             [DurableClient] IDurableOrchestrationClient starter,
             ILogger log)
         {
-            var instanceId = await starter.StartNewAsync("ExecuteWorkflow", null, 1);
-            //var workflowToStart = "Function2";
-
-            // Function input comes from the request content.
-            //string instanceId = await starter.StartNewAsync(workflowToStart, null);
-
+            var workflowId = 1;
+            var instanceId = await starter.StartNewAsync("ExecuteWorkflow", null, workflowId);
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
             return starter.CreateCheckStatusResponse(req, instanceId);
